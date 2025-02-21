@@ -1,5 +1,6 @@
 const API_KEY = "d78c7748199045fb81cd8ce5681a4456";
-const url = "https://gnews.io/api/v4/";
+const proxyUrl = "https://api.allorigins.win/get?url=";
+const gnewsUrl = "https://gnews.io/api/v4/";
 
 
 
@@ -10,18 +11,28 @@ function reload() {
 }
 
 async function fetchNews(query) {
+    const cardsContainer = document.getElementById("cards-container");
     document.getElementById('loading-spinner').style.display = 'block';
-    
+    cardsContainer.innerHTML = "";
+
     try {
-        const res = await fetch(`${url}${query}&apikey=${API_KEY}&lang=en&max=10`);
+        const encodedUrl = encodeURIComponent(`${gnewsUrl}${query}&apikey=${API_KEY}&lang=en&max=10`);
+        const res = await fetch(`${proxyUrl}${encodedUrl}`);
         const data = await res.json();
-        bindData(data.articles);
+        const articles = JSON.parse(data.contents).articles;
+        
+        if(articles.length === 0) {
+            cardsContainer.innerHTML = "<h3>No news found for this category</h3>";
+            return;
+        }
+        
+        bindData(articles);
     } catch (error) {
-        console.error("Error fetching news:", error);
+        console.error("Error:", error);
         cardsContainer.innerHTML = "<h3>Failed to load news. Please try again later.</h3>";
+    } finally {
+        document.getElementById('loading-spinner').style.display = 'none';
     }
-    
-    document.getElementById('loading-spinner').style.display = 'none';
 }
 
 function bindData(articles) {
